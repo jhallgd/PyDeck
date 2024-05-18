@@ -3,16 +3,49 @@ import Card
 
 class black_jack():
 
-    def __init__(self):
+    #When a game is initiated.
+    def __init__(self, chips):
         self.unplayedDeck = []
         self.playedDeck = []
         self.dealerHand = []
         self.playerHand = []
         self.splitHand = []
-        self.playerChips = 0
+        self.playerChips = chips
         self.playerBet = 0
+        self.gameOver = True
+        self.playerDone = False
+
+    #Starts the game, and build and shuffle the decks.  
+    def startGame(self, decksAmount):
+        for x in range(int(decksAmount)):
+            self.unplayedDeck.extend(Card.buildDeck())
+    
+    #Setups a new game
+    def gameSetup(self, betAmount):
+        self.gameOver = False
+        self.playerBet = betAmount
+        self.playerChips = self.playerChips - betAmount
+        self.giveCard("player")
+        self.giveCard("dealer")
+        self.giveCard("player")
+        self.giveCard("dealer")
 
 
+#Get functions
+
+    #Get Dealer Hand
+    def getDealerHand(self):
+        if(self.playerDone):
+            return self.dealerHand
+        else:
+            showhand = [self.dealerHand[0], "????"]
+            return showhand
+    
+    #Get Player Hand
+    def getPlayerHand(self):
+        return self.playerHand
+
+    #Get Options
     def getOptions(self):
         options = ["Hit", "Stand"]
         if len(self.playerHand) == 2:
@@ -20,9 +53,15 @@ class black_jack():
             if self.playerHand[0].showNumber() == self.playerHand[1].showNumber():
                 options.append("Split")
         return options
+    
+    def checkPlayerDone(self):
+        return self.playerDone
 
-    def showChips(self):
+    def getPlayerChips(self):
         return self.playerChips
+    
+    def getPlayerBet(self):
+        return self.playerBet
 
     def checkPlayerBust(self):
         self.showPlayerHand()
@@ -30,21 +69,16 @@ class black_jack():
         self.checkGameOver()
 
     def checkGameOver(self):
-        self.playerChips
         if self.playerChips == 0:
-            print("Game Over you Lost")
-        else:
-            self.cardCleanup()
-
-    def showDealerHand(self):
-        for dh in self.dealerHand:
-            print(dh)
-
+            self.gameOver = True
 
     def countDealerHand(self):
         count = 0
-        for dh in self.dealerHand:
-            count = count + dh.getValue()
+        if(self.playerDone):
+            for dh in self.dealerHand:
+                count = count + dh.getValue()
+        else:
+            count = self.dealerHand[0].getValue()
         return count
 
 
@@ -86,21 +120,14 @@ class black_jack():
         self.checkGameOver()
 
 
-
+    # Dealer Decides what to do
     def dealerPlay(self):
-        self.showDealerHand()
         score = self.countDealerHand()
         if score <= 17:
-            print("Dealer has " + str(score))
-            print("  ")
-            print("Dealer takes a hit.")
-            print("  ")
-            self.giveCard("dealer")
-            self.dealerPlay()
+            return "Hit"
         else:
-            print("Dealer has " + str(score))
-            print("  ")
-            self.findWinner()
+            return "Stand"
+
 
 
     def showPlayerHand(self):
@@ -119,6 +146,28 @@ class black_jack():
             return True
         return False
 
+    
+    
+    #Player Actions
+    
+    #Hit
+    def playerHit(self):
+        self.giveCard("player")
+    
+    #Stand
+    def playerStand(self):
+        self.playerDone = True
+    
+    #Double
+    def playerDouble(self):
+        self.playerChips = self.playerChips - self.playerBet
+        self.playerBet = self.playerBet * 2
+        self.giveCard("player")
+        self.playerDone = True
+
+    
+
+    
     def playGame(self):
         check = 0
         print("Dealer Hand:")
@@ -155,34 +204,6 @@ class black_jack():
             else:
                 print("You don't have enough to double")
                 self.playGame()
-
-
-    def gameSetup(self):
-        self.showChips()
-        betAmount = int(input("Place your bet."))
-        if not self.checkBet(betAmount):
-            print("You can not bet that.")
-            self.gameSetup()
-        self.playerChips = self.playerChips - betAmount
-        self.playerBet = betAmount
-        self.giveCard("player")
-        self.giveCard("dealer")
-        self.giveCard("player")
-        self.giveCard("dealer")
-        self.playGame()
-
-
-    def startGame(self):
-        decksAmount = input("How Many Decks? (1-5)")
-        if int(decksAmount) > 0 and int(decksAmount) < 6:
-            for x in range(int(decksAmount)):
-                self.unplayedDeck.extend(Card.buildDeck())
-            self.playerChips = 200
-            self.gameSetup()
-
-        else:
-            print("Please enter a valid number (1-5")
-            self.startGame()
 
     def giveCard(self, target):
         card = random.randrange(0, len(self.unplayedDeck)-1, 1)
